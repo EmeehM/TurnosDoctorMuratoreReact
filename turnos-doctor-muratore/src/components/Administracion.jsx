@@ -24,7 +24,8 @@ function Administracion() {
   const handleCodigoSubmit = (e) => {
     e.preventDefault();
     // Aquí puedes validar el código
-    if (codigo === import.meta.env.CODE_MURATORE) {
+    alert(import.meta.env.VITE_CODE_MURATORE);
+    if (codigo === import.meta.env.VITE_CODE_MURATORE) {
       setMostrarPanel(true);
     } else {
       alert("Código incorrecto");
