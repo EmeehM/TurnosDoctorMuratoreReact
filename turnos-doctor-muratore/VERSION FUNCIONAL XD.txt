@@ -1,0 +1,267 @@
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+const supabaseUrl = import.meta.env.VITE_API_URL_SUPABASE;
+const supabaseKey = import.meta.env.VITE_API_KEY_SUPABASE;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+function App() {
+  const [turnos, setTurnos] = useState([]);
+  const [formData, setFormData] = useState({
+    dni: '',
+    nombre: '',
+    obra_social: '',
+    numero_asociado: '',
+    horario: ''
+  });
+
+  useEffect(() => {
+    fetchTurnos();
+  }, []);
+
+  const fetchTurnos = async () => {
+    const { data, error } = await supabase.from('turnos').select('*');
+    if (error) {
+      console.error(error);
+    } else {
+      setTurnos(data);
+    }
+  };
+
+  const isDateInPast = (date) => {
+    return new Date(date) < new Date();
+  };
+
+  const isFormValid = () => {
+    if (!formData.dni || !formData.nombre || !formData.obra_social || !formData.numero_asociado) {
+      toast.error('Ingresar todos los datos antes de reservar.');
+      return false;
+    }
+    return true;
+  };
+
+  const isWithinBusinessHours = (date) => {
+    const day = date.getDay();
+    const hours = date.getHours();
+
+    // Verificar si es lunes a viernes
+    const isWeekday = day >= 1 && day <= 5;
+
+    // Verificar si está dentro de los horarios permitidos (8-13 y 17-22)
+    const isMorning = hours >= 8 && hours < 13;
+    const isEvening = hours >= 17 && hours < 22;
+
+    return isWeekday && (isMorning || isEvening);
+  };
+
+  const confirmReservation = (onConfirm, onCancel) => {
+    toast.info(
+      <div>
+        <p>¿Confirmar la reserva?</p>
+        <div className="flex justify-center mt-2">
+          <button onClick={onConfirm} className="bg-green-500 text-white py-1 px-2 rounded mr-2">Sí</button>
+          <button onClick={onCancel} className="bg-red-500 text-white py-1 px-2 rounded">No</button>
+        </div>
+      </div>, 
+      {
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        hideProgressBar: true,
+      }
+    );
+  };
+
+  const handleDateClick = (arg) => {
+    const selectedDate = arg.date;
+
+    // Verificar que los campos del formulario no estén vacíos
+    if (!isFormValid()) {
+      return;
+    }
+
+    // Verificar que no se pueda reservar un turno en el pasado
+    if (isDateInPast(selectedDate)) {
+      toast.error('No se pueden reservar turnos en el pasado.');
+      return;
+    }
+
+    // Verificar que el horario esté dentro del rango permitido
+    if (!isWithinBusinessHours(selectedDate)) {
+      toast.error('Los turnos solo pueden ser de lunes a viernes de 8-13 y 17-22 horas.');
+      return;
+    }
+
+    // Verificar si ya hay un turno en la misma fecha y hora
+    const existingTurno = turnos.find(turno => new Date(turno.horario).getTime() === selectedDate.getTime());
+    if (existingTurno) {
+      toast.error('Ya hay un turno reservado en esa fecha y hora.');
+      return;
+    }
+
+    // Ajustar el turno a 15 minutos de duración
+    const endDate = new Date(selectedDate);
+    endDate.setMinutes(endDate.getMinutes() + 15);
+
+    // Estética para confirmar la reserva
+    confirmReservation(
+      async () => {
+        const newTurno = {
+          dni: formData.dni,
+          nombre: formData.nombre,
+          obra_social: formData.obra_social,
+          numero_asociado: formData.numero_asociado,
+          horario: selectedDate.toISOString(),
+        };
+
+        const { error } = await supabase.from('turnos').insert([newTurno]);
+        if (error) {
+          toast.error('Ocurrió un error al reservar el turno.');
+        } else {
+          setTurnos([...turnos, newTurno]);
+          toast.dismiss(); // Cierra el toast de confirmación
+          toast.success('Turno reservado con éxito.');
+        }
+      },
+      () => {
+        toast.dismiss(); // Cierra el toast de confirmación si se cancela
+      }
+    );
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!isFormValid()) {
+      return;
+    }
+
+    if (isDateInPast(formData.horario)) {
+      toast.error('No se pueden reservar turnos en el pasado.');
+      return;
+    }
+
+    const existingTurno = turnos.find(turno => new Date(turno.horario).getTime() === new Date(formData.horario).getTime());
+    if (existingTurno) {
+      toast.error('Ya hay un turno reservado en esa fecha y hora.');
+      return;
+    }
+
+    const { error } = await supabase.from('turnos').insert([{ ...formData }]);
+    if (error) {
+      toast.error('Ocurrió un error al reservar el turno.');
+    } else {
+      setTurnos([...turnos, { ...formData }]);
+      toast.success('Turno reservado con éxito.');
+      setFormData({ dni: '', nombre: '', obra_social: '', numero_asociado: '', horario: '' });
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-sky-900">
+      <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow-md">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Reserva de Turnos</h1>
+        <button 
+          onClick={() => {/* Aquí debes agregar la lógica para redirigir a la página de administración */}} 
+          className="bg-blue-500 text-white py-1 px-2 rounded ml-4">
+          Administración
+        </button>
+      </div>
+        <form onSubmit={handleSubmit} className="mb-4">
+          <input
+            type="text"
+            placeholder="DNI"
+            value={formData.dni}
+            onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+            className="mb-2 p-2 border border-gray-300 rounded w-full"
+          />
+          <input
+            type="text"
+            placeholder="Nombre"
+            value={formData.nombre}
+            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+            className="mb-2 p-2 border border-gray-300 rounded w-full"
+          />
+          <input
+            type="text"
+            placeholder="Obra Social"
+            value={formData.obra_social}
+            onChange={(e) => setFormData({ ...formData, obra_social: e.target.value })}
+            className="mb-2 p-2 border border-gray-300 rounded w-full"
+          />
+          <input
+            type="text"
+            placeholder="Número Asociado"
+            value={formData.numero_asociado}
+            onChange={(e) => setFormData({ ...formData, numero_asociado: e.target.value })}
+            className="mb-2 p-2 border border-gray-300 rounded w-full"
+          />
+          {/* Este input se oculta en pantallas grandes */}
+          <div className="block md:hidden">
+            <input
+              type="datetime-local"
+              value={formData.horario}
+              onChange={(e) => setFormData({ ...formData, horario: e.target.value })}
+              className="mb-2 p-2 border border-gray-300 rounded w-full"
+            />
+            <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded">Reservar</button>
+          </div>
+        </form>
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          allDaySlot={false}
+          slotDuration={"00:15:00"} // Intervalo de 15 minutos
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'timeGridWeek,timeGridDay'
+          }}
+          slotLabelFormat={{
+            hour:'2-digit',
+            minute: '2-digit', // Mostrar minutos también
+            omitZeroMinute: false, // Mostrar los :00 y los :15, :30, :45
+            hour12: false, // Formato 24 horas
+          }}
+          events={turnos.map(turno => ({
+            title: turno.nombre,
+            start: turno.horario,
+            end: new Date(new Date(turno.horario).getTime() + 15 * 60000).toISOString(),
+          }))}
+          dateClick={handleDateClick}
+          validRange={{
+            start: new Date(),
+            end: null,
+          }}
+          businessHours={[
+            {
+              daysOfWeek: [1, 2, 3, 4, 5], // Lunes a viernes
+              startTime: '08:00', // Horario de la mañana
+              endTime: '13:00',
+            },
+            {
+              daysOfWeek: [1, 2, 3, 4, 5], // Lunes a viernes
+              startTime: '17:00', // Horario de la tarde
+              endTime: '22:00',
+            },
+          ]}
+          locale={'es'}
+          slotMinTime="08:00:00"
+          slotMaxTime="22:00:00"
+          weekends={false}
+        />
+        <ToastContainer />
+      </div>
+    </div>
+  );
+}
+
+export default App;
