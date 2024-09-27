@@ -20,7 +20,7 @@ function App() {
             {isAdmin ? 'Volver' : 'Administración'}
           </button>
         </div>
-        {isAdmin ? <Administracion /> : <Turnos />} {/* Muestra el componente adecuado */}
+        {isAdmin ? <Administracion /> : <Turnos />} 
       </div>
     </div>
   );

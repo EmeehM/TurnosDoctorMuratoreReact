@@ -27,95 +27,57 @@ const Calendar = ({ formData, setFormData }) => {
     }
   };
 
-  // Llamar a fetchTurnos cuando el componente cargue
+  // Llamar a fetchTurnos cuando el componente cargue y cada 30 segundos
   useEffect(() => {
-    fetchTurnos();
+    fetchTurnos(); // Carga inicial de turnos
+    const intervalId = setInterval(fetchTurnos, 30000); // Actualización cada 30 segundos
+
+    return () => clearInterval(intervalId); // Limpia el intervalo al desmontar el componente
   }, []);
 
-  // Función para validar si todos los campos obligatorios están llenos
-  const validateForm = () => {
-    const { nombre, dni, obra_social, numero_asociado } = formData;
-
-    if (!nombre || !dni || !obra_social || !numero_asociado) {
-      toast.error("Por favor, completa todos los campos del formulario.");
-      return false;
-    }
-    return true;
-  };
-
-  const handleDateClick = async (arg) => {
-    const selectedDateTime = new Date(arg.dateStr);
-    const currentDateTime = new Date();
-
-    // Validar que la fecha seleccionada no esté en el pasado
-    if (selectedDateTime < currentDateTime) {
-      toast.error("No puedes reservar un turno en el pasado.");
-      return;
-    }
-
-    // Validar que el formulario esté completo antes de continuar
-    if (!validateForm()) {
-      return; // Si la validación falla, no se continúa con la creación del turno
-    }
-
-    // Actualizar el formData con el horario seleccionado
-    setFormData({ ...formData, horario: selectedDateTime.toISOString() });
-
-    // Guardar el turno en la base de datos (en la tabla "turnos")
-    const { error } = await supabase
-      .from("turnos")
-      .insert([{ ...formData, horario: selectedDateTime.toISOString() }]);
-
-    if (error) {
-      toast.error("Error al guardar el turno.");
-    } else {
-      toast.success("Turno reservado con éxito.");
-      // Recargar los turnos para que se refleje el nuevo turno en el calendario
-      fetchTurnos();
-    }
-  };
-
   return (
-    <FullCalendar
-      plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-      initialView="timeGridWeek"
-      allDaySlot={false}
-      slotDuration={"00:15:00"}
-      headerToolbar={{
-        left: "prev,next today",
-        center: "title",
-        right: "timeGridWeek,timeGridDay",
-      }}
-      slotLabelFormat={{
-        hour: "2-digit",
-        minute: "2-digit",
-        omitZeroMinute: false,
-        hour12: false,
-      }}
-      events={turnos.map((turno) => ({
-        title: turno.nombre,
-        start: turno.horario,
-        end: new Date(
-          new Date(turno.horario).getTime() + 15 * 60000
-        ).toISOString(),
-      }))}
-      dateClick={handleDateClick}
-      validRange={{
-        start: new Date(),
-        end: null,
-      }}
-      businessHours={[
-        {
-          daysOfWeek: [1, 2, 3, 4, 5], // Días laborales (lunes a viernes)
-          startTime: "17:45",
-          endTime: "20:30",
-        },
-      ]}
-      locale={"es"}
-      slotMinTime="17:00:00"
-      slotMaxTime="22:00:00"
-      weekends={false} // Excluir fines de semana
-    />
+    <>
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="timeGridWeek"
+        allDaySlot={false}
+        slotDuration={"00:15:00"}
+        headerToolbar={{
+          left: "prev,next today",
+          center: "title",
+          right: "timeGridWeek,timeGridDay",
+        }}
+        slotLabelFormat={{
+          hour: "2-digit",
+          minute: "2-digit",
+          omitZeroMinute: false,
+          hour12: false,
+        }}
+        events={turnos.map((turno) => ({
+          title: turno.nombre,
+          start: turno.horario,
+          end: new Date(
+            new Date(turno.horario).getTime() + 15 * 60000
+          ).toISOString(),
+        }))}
+        validRange={{
+          start: new Date(),
+          end: null,
+        }}
+        businessHours={[
+          {
+            daysOfWeek: [1, 2, 3, 4, 5], // Días laborales (lunes a viernes)
+            startTime: "17:45",
+            endTime: "20:30",
+          },
+        ]}
+        locale={"es"}
+        slotMinTime="17:00:00"
+        slotMaxTime="22:00:00"
+        weekends={false} // Excluir fines de semana
+      />
+      <ToastContainer /> 
+    </>
   );
 };
 

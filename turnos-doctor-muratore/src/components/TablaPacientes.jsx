@@ -20,8 +20,16 @@ function AdminPanel() {
       toast.error("Error al cargar los turnos: " + error.message);
       console.error(error);
     } else {
+      // Filtrar solo los turnos del día actual
+      const today = new Date();
+      const todayString = today.toISOString().split('T')[0]; // Obtener la fecha actual en formato YYYY-MM-DD
+      const filteredTurnos = data.filter(turno => {
+        const turnoDate = new Date(turno.horario).toISOString().split('T')[0];
+        return turnoDate === todayString; // Comparar solo las fechas
+      });
+
       // Ordenar los turnos por horario más cercano
-      const sortedTurnos = data.sort((a, b) => new Date(a.horario) - new Date(b.horario));
+      const sortedTurnos = filteredTurnos.sort((a, b) => new Date(a.horario) - new Date(b.horario));
       setTurnos(sortedTurnos);
     }
   };
@@ -38,7 +46,7 @@ function AdminPanel() {
 
   return (
     <div>
-      <h2 className="text-2xl mb-4">Registros de Turnos</h2>
+      <h2 className="text-2xl mb-4">Registros de Turnos de hoy</h2>
       <table className="min-w-full border-collapse border border-gray-300">
         <thead>
           <tr>
