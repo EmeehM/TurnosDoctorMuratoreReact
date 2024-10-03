@@ -23,7 +23,6 @@ function Administracion() {
 
   const handleCodigoSubmit = (e) => {
     e.preventDefault();
-    // Aquí puedes validar el código
     if (codigo === import.meta.env.VITE_CODE_MURATORE) {
       setMostrarPanel(true);
     } else {
