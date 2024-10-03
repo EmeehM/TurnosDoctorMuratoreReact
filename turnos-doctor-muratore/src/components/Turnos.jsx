@@ -26,8 +26,8 @@ function Turnos() {
     horario: new Date()
   });
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(""); // Estado para el mensaje de éxito
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false); // Estado para deshabilitar el botón
+  const [successMessage, setSuccessMessage] = useState(""); 
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false); 
 
   useEffect(() => {
     const fetchTurnos = async () => {
@@ -37,10 +37,10 @@ function Turnos() {
 
       if (error) {
         toast.error("Error al cargar turnos: " + error.message);
-      } else if (turnosData) { // Verifica que turnosData no sea null
+      } else if (turnosData) { 
         setTurnos(turnosData);
       } else {
-        toast.error("No se encontraron turnos."); // Mensaje si no hay datos
+        toast.error("No se encontraron turnos.");
       }
     };
     fetchTurnos();
@@ -67,7 +67,7 @@ function Turnos() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsButtonDisabled(true); // Deshabilitar el botón
+    setIsButtonDisabled(true); 
 
     const existingTurnos = turnos.filter(turno =>
       new Date(turno.horario).toISOString() === new Date(formData.horario).toISOString()
@@ -75,7 +75,7 @@ function Turnos() {
 
     if (existingTurnos.length > 0) {
       toast.error("Ya existe un turno en este horario.");
-      setIsButtonDisabled(false); // Habilitar el botón de nuevo
+      setIsButtonDisabled(false); 
       return;
     }
 
@@ -106,14 +106,14 @@ function Turnos() {
     if (error) {
       console.error("Error al reservar el turno:", error);
       toast.error("Error al reservar el turno: " + error.message);
-      setIsButtonDisabled(false); // Habilitar el botón de nuevo
+      setIsButtonDisabled(false); 
     } else {
-      setSuccessMessage("Turno reservado exitosamente."); // Mostrar mensaje de éxito
-      setTurnos([...turnos, data[0]]); // Actualiza la lista de turnos
+      setSuccessMessage("Turno reservado exitosamente."); 
+      setTurnos([...turnos, data[0]]); 
       setFormData({ dni: '', nombre: '', obra_social: '', numero_asociado: '', horario: new Date() });
-      setIsButtonDisabled(false); // Habilitar el botón nuevamente
+      setIsButtonDisabled(false); 
       setTimeout(() => {
-        setSuccessMessage(""); // Ocultar mensaje después de 2 segundos
+        setSuccessMessage(""); 
       }, 2000);
     }
   };
@@ -141,31 +141,62 @@ function Turnos() {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit} className="mb-4">
-        <input type="number" placeholder="DNI" value={formData.dni} onChange={(e) => setFormData({ ...formData, dni: e.target.value })} className="mb-2 p-2 border border-gray-300 rounded w-full" required />
-        <input type="text" placeholder="Nombre" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="mb-2 p-2 border border-gray-300 rounded w-full" required />
-        <input type="text" placeholder="Obra Social" value={formData.obra_social} onChange={(e) => setFormData({ ...formData, obra_social: e.target.value })} className="mb-2 p-2 border border-gray-300 rounded w-full" required />
-        <input type="number" placeholder="Número Asociado" value={formData.numero_asociado} onChange={(e) => setFormData({ ...formData, numero_asociado: e.target.value })} className="mb-2 p-2 border border-gray-300 rounded w-full" required />
-        <ReactDatePicker
-          selected={formData.horario}
-          onChange={handleDateChange}
-          showTimeSelect
-          timeFormat="HH:mm"
-          timeIntervals={15}
-          includeTimes={generateAllowedTimes()}  
-          locale="es"
-          dateFormat="Pp"
-          minDate={new Date()}
-          className={`mb-2 p-2 border border-gray-300 rounded w-full ${isDatePickerOpen ? 'ml-36' : ''}`}
-          onCalendarOpen={handleDatePickerOpen}
-          onCalendarClose={handleDatePickerClose}
-          required
+    <div className="bg-gray-800 text-white shadow-lg rounded-lg p-6 max-w-fit h-fit mx-auto">
+      <h2 className="text-3xl font-bold text-center text-blue-400 mb-6">Reserva de Turnos</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input 
+          type="number" 
+          placeholder="DNI" 
+          value={formData.dni} 
+          onChange={(e) => setFormData({ ...formData, dni: e.target.value })} 
+          className="p-3 border border-gray-600 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white" 
+          required 
         />
-        <div className={`${isDatePickerOpen ? 'mb-60' : ''}`}></div>
+        <input 
+          type="text" 
+          placeholder="Nombre" 
+          value={formData.nombre} 
+          onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} 
+          className="p-3 border border-gray-600 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white" 
+          required 
+        />
+        <input 
+          type="text" 
+          placeholder="Obra Social" 
+          value={formData.obra_social} 
+          onChange={(e) => setFormData({ ...formData, obra_social: e.target.value })} 
+          className="p-3 border border-gray-600 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white" 
+          required 
+        />
+        <input 
+          type="number" 
+          placeholder="Número Asociado" 
+          value={formData.numero_asociado} 
+          onChange={(e) => setFormData({ ...formData, numero_asociado: e.target.value })} 
+          className="p-3 border border-gray-600 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white" 
+          required 
+        />
+        
+        <div className={``}>
+          <ReactDatePicker
+            selected={formData.horario}
+            onChange={handleDateChange}
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={15}
+            includeTimes={generateAllowedTimes()}  
+            locale="es"
+            dateFormat="Pp"
+            minDate={new Date()}
+            className={`p-3 border border-gray-600 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white`}
+            onCalendarOpen={handleDatePickerOpen}
+            onCalendarClose={handleDatePickerClose}
+            required
+          />
+        </div>
         <button 
           type="submit" 
-          className={`bg-blue-500 text-white py-2 px-4 rounded ${isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} 
+          className={`bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded w-full ${isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} 
           disabled={isButtonDisabled}
         >
           Reservar
@@ -180,7 +211,11 @@ function Turnos() {
           </div>
         )}
       </form>
-      <Calendar turnos={turnos} formData={formData} setFormData={setFormData} />
+      {!isDatePickerOpen ? (
+        <Calendar turnos={turnos} formData={formData} setFormData={setFormData} />
+      ) : (
+        <div className='p-20'></div>
+      )}
       <ToastContainer />
     </div>
   );
