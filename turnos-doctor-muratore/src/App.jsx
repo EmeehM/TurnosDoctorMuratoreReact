@@ -24,7 +24,7 @@ function App() {
       cancelButtonText: 'Cancelar',
       preConfirm: (password) => {
         // Verifica la contraseña ingresada (puedes cambiar "tu_contraseña" por la contraseña real)
-        if (password === 'tu_contraseña') {
+        if (password === import.meta.env.VITE_CODE_MURATORE) {
           setIsAdmin(true);
           Swal.fire('¡Bienvenido!', '', 'success');
         } else {

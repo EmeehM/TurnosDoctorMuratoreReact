@@ -20,8 +20,10 @@ const Doctor = () => {
         medicamentos: "",
     });
     const [modoEdicion, setModoEdicion] = useState(false);
+    const [modoCrear, setModoCrear] = useState(false);
     const [error, setError] = useState("");
 
+    // Buscar sugerencias de pacientes
     const buscarSugerencias = async () => {
         const trimmedNombre = nombre.trim();
         if (!trimmedNombre) return;
@@ -40,7 +42,9 @@ const Doctor = () => {
         }
     };
 
+    // Cargar los datos del paciente seleccionado
     const cargarPaciente = (pacienteSeleccionado) => {
+        setModoCrear(false);
         setPaciente(pacienteSeleccionado);
         setDatosFormulario({
             dni: pacienteSeleccionado.dni,
@@ -55,6 +59,7 @@ const Doctor = () => {
         setSugerencias([]);
     };
 
+    // Manejar cambios en los inputs del formulario
     const manejarCambioInput = (e) => {
         const { name, value } = e.target;
         setDatosFormulario((prev) => ({
@@ -63,6 +68,7 @@ const Doctor = () => {
         }));
     };
 
+    // Agregar un nuevo paciente
     const agregarPaciente = async () => {
         const { dni, nombre, apellido, obra_social, numero_asociado, historial_clinico, medicamentos } = datosFormulario;
 
@@ -78,9 +84,9 @@ const Doctor = () => {
 
         try {
             await supabase.from("pacientesmuramar").insert([{
-                dni,
                 nombre,
                 apellido,
+                dni,
                 obra_social,
                 numero_asociado,
                 historial_clinico,
@@ -104,6 +110,7 @@ const Doctor = () => {
         }
     };
 
+    // Editar un paciente existente
     const editarPaciente = async () => {
         const { dni, nombre, apellido, obra_social, numero_asociado, historial_clinico, medicamentos } = datosFormulario;
 
@@ -147,6 +154,7 @@ const Doctor = () => {
         }
     };
 
+    // Eliminar un paciente
     const eliminarPaciente = async () => {
         const confirmacion = await Swal.fire({
             title: "¿Estás seguro?",
@@ -181,6 +189,7 @@ const Doctor = () => {
         }
     };
 
+    // Cancelar la edición de un paciente
     const cancelarEdicion = () => {
         setModoEdicion(false);
         setDatosFormulario({
@@ -195,8 +204,10 @@ const Doctor = () => {
         setPaciente(null);
     };
 
+    // Crear un nuevo paciente
     const crearNuevoPaciente = () => {
         setModoEdicion(true);
+        setModoCrear(true);
         setPaciente(null);
         setDatosFormulario({
             dni: "",
@@ -211,28 +222,28 @@ const Doctor = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center p-6">
-            <h1 className="text-2xl font-bold mb-4">Buscar Paciente</h1>
-            <div className="flex mb-4">
+        <div className="flex flex-col items-center justify-center p-6 bg-gray-800 min-h-screen">
+            <h1 className="text-3xl font-bold text-blue-200 mb-4">Buscar Paciente</h1>
+            <div className="flex mb-4 space-x-2">
                 <input
                     type="text"
                     placeholder="Ingrese el nombre del paciente"
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
-                    className="border rounded p-2 mr-2"
+                    className="border border-gray-300 rounded p-2 w-80 bg-white"
                 />
-                <button onClick={buscarSugerencias} className="bg-blue-500 text-white py-1 px-4 rounded">
+                <button onClick={buscarSugerencias} className="bg-blue-600 text-white py-2 px-4 rounded shadow-md hover:bg-blue-700">
                     Buscar
                 </button>
-                <button onClick={crearNuevoPaciente} className="bg-green-500 text-white py-1 px-4 rounded ml-2">
+                <button onClick={crearNuevoPaciente} className="bg-green-600 text-white py-2 px-4 rounded shadow-md hover:bg-green-700">
                     Crear Nuevo Paciente
                 </button>
             </div>
 
-            {error && <p className="text-red-500">{error}</p>}
+            {error && <p className="text-red-600 mb-4">{error}</p>}
 
             {sugerencias.length > 0 && (
-                <ul className="bg-white rounded shadow-md w-full max-w-xs">
+                <ul className="bg-white rounded shadow-md w-80">
                     {sugerencias.map((paciente) => (
                         <li
                             key={paciente.dni}
@@ -246,54 +257,87 @@ const Doctor = () => {
             )}
 
             {paciente && (
-                <div className="mt-4">
-                    <h2 className="font-bold">Datos del Paciente</h2>
+                <div className="mt-4 bg-white rounded shadow-md p-4 w-80">
+                    <h2 className="font-bold text-lg text-blue-600">Datos del Paciente</h2>
                     <p><strong>Nombre:</strong> {paciente.nombre} {paciente.apellido}</p>
                     <p><strong>DNI:</strong> {paciente.dni}</p>
                     <p><strong>Obra Social:</strong> {paciente.obra_social}</p>
                     <p><strong>Número de Afiliado:</strong> {paciente.numero_asociado}</p>
-                    <p className="text-lg font-bold mt-2">Historial Clínico</p>
-                    <p>{paciente.historial_clinico || "No disponible"}</p>
-                    <p className="text-lg font-bold mt-2">Medicamentos Utilizados</p>
-                    <p>{paciente.medicamentos || "No disponible"}</p>
-
-                    <button onClick={eliminarPaciente} className="bg-red-500 text-white py-1 px-4 rounded mt-2">
-                        Eliminar Paciente
-                    </button>
+                    <p><strong>Historial Clínico:</strong> {paciente.historial_clinico}</p>
+                    <p><strong>Medicamentos:</strong> {paciente.medicamentos}</p>
+                    <div className="flex space-x-2">
+                        <button onClick={eliminarPaciente} className="bg-red-600 text-white py-1 px-2 rounded shadow-md hover:bg-red-700">Eliminar</button>
+                        <button onClick={cancelarEdicion} className="bg-gray-400 text-white py-1 px-2 rounded shadow-md hover:bg-gray-500">Cancelar</button>
+                    </div>
                 </div>
             )}
 
             {modoEdicion && (
-                <div className="mt-4">
-                    <h2 className="font-bold">{paciente ? "Editar Paciente" : "Agregar Paciente"}</h2>
-                    {Object.keys(datosFormulario).map((key) => (
-                        <div key={key} className="mb-4">
-                            <label className="block mb-1">{key.replace("_", " ").charAt(0).toUpperCase() + key.slice(1)}</label>
-                            {key === "historial_clinico" || key === "medicamentos" ? (
-                                <textarea
-                                    name={key}
-                                    value={datosFormulario[key]}
-                                    onChange={manejarCambioInput}
-                                    className="border rounded p-2 w-full h-32"
-                                />
-                            ) : (
-                                <input
-                                    type={key === "dni" || key === "numero_asociado" ? "number" : "text"}
-                                    name={key}
-                                    value={datosFormulario[key]}
-                                    onChange={manejarCambioInput}
-                                    className="border rounded p-2 w-full"
-                                    min={0}
-                                />
-                            )}
-                        </div>
-                    ))}
-                    <div className="flex space-x-2">
-                        <button onClick={paciente ? editarPaciente : agregarPaciente} className="bg-blue-500 text-white py-1 px-4 rounded">
-                            {paciente ? "Guardar Cambios" : "Agregar Paciente"}
-                        </button>
-                        <button onClick={cancelarEdicion} className="bg-gray-500 text-white py-1 px-4 rounded">Cancelar</button>
-                    </div>
+                <div className="mt-4 bg-white rounded shadow-md p-4 w-80">
+                    <h2 className="font-bold text-lg text-blue-600">Formulario de Paciente</h2>
+                    <input
+                        type="number"
+                        min={0}
+                        name="dni"
+                        value={datosFormulario.dni}
+                        onChange={manejarCambioInput}
+                        placeholder="DNI"
+                        className="border border-gray-300 rounded p-2 w-full mb-2"
+                    />
+                    <input
+                        type="text"
+                        name="nombre"
+                        value={datosFormulario.nombre}
+                        onChange={manejarCambioInput}
+                        placeholder="Nombre"
+                        className="border border-gray-300 rounded p-2 w-full mb-2"
+                    />
+                    <input
+                        type="text"
+                        name="apellido"
+                        value={datosFormulario.apellido}
+                        onChange={manejarCambioInput}
+                        placeholder="Apellido"
+                        className="border border-gray-300 rounded p-2 w-full mb-2"
+                    />
+                    <input
+                        type="text"
+                        name="obra_social"
+                        value={datosFormulario.obra_social}
+                        onChange={manejarCambioInput}
+                        placeholder="Obra Social"
+                        className="border border-gray-300 rounded p-2 w-full mb-2"
+                    />
+                    <input
+                        type="number"
+                        min={0}
+                        name="numero_asociado"
+                        value={datosFormulario.numero_asociado}
+                        onChange={manejarCambioInput}
+                        placeholder="Número de Afiliado"
+                        className="border border-gray-300 rounded p-2 w-full mb-2"
+                    />
+                    <textarea
+                        name="historial_clinico"
+                        value={datosFormulario.historial_clinico}
+                        onChange={manejarCambioInput}
+                        placeholder="Historial Clínico"
+                        className="border border-gray-300 rounded p-2 w-full mb-2"
+                    />
+                    <textarea
+                        name="medicamentos"
+                        value={datosFormulario.medicamentos}
+                        onChange={manejarCambioInput}
+                        placeholder="Medicamentos"
+                        className="border border-gray-300 rounded p-2 w-full mb-2"
+                    />
+                    {console.log(modoCrear)}
+                    <button
+                        onClick={modoCrear ?  agregarPaciente : editarPaciente}
+                        className="bg-blue-600 text-white py-2 px-4 rounded shadow-md hover:bg-blue-700 w-full"
+                    >
+                        {modoCrear ?  'Agregar Paciente' : 'Editar Paciente'}
+                    </button>
                 </div>
             )}
         </div>

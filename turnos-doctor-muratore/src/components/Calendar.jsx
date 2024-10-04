@@ -66,6 +66,16 @@ const Calendar = ({ formData, setFormData }) => {
           center: "today", // Muestra los botones prev y next
           right: "timeGridWeek,timeGridDay",
         }}
+        views={{
+          dayGridDay: {
+            dayHeaderFormat: { weekday: 'long', day: 'numeric', month: 'numeric' }, // Aquí configuras el formato de la cabecera
+            titleFormat: { day: 'numeric', month: 'numeric', year: 'numeric' }, // Opcional: para ajustar el título central si es necesario
+          },
+          timeGridDay: {
+            dayHeaderFormat: { weekday: 'long', day: 'numeric', month: 'numeric' }, // Similar para la vista de tiempo
+            titleFormat: { day: 'numeric', month: 'numeric', year: 'numeric' }, // Título en el formato de día completo
+          }
+        }}
         slotLabelFormat={{
           hour: "2-digit",
           minute: "2-digit",
@@ -98,7 +108,6 @@ const Calendar = ({ formData, setFormData }) => {
         dayHeaderClassNames="bg-gray-700 text-white"
         eventClassNames="bg-blue-600 text-white border-blue-800"
       />
-      <ToastContainer />
     </div>
   );
 };
